@@ -1,22 +1,6 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 import { dateFormat } from '../utils/dateFormat';
-
-interface IReaction {
-    reactionId: mongoose.Types.ObjectId;
-    reactionBody: string;
-    username: string;
-    createdAt: Date;
-}
-
-interface IThought extends Document {
-    thoughtText: string;
-    createdAt: Date;
-    username: string;
-    reactions: IReaction[];
-    reactionCount: number;
-}
-
-const ReactionSchema = new Schema<IReaction>({
+const ReactionSchema = new Schema({
     reactionId: {
         type: Schema.Types.ObjectId,
         default: () => new mongoose.Types.ObjectId(),
@@ -33,8 +17,8 @@ const ReactionSchema = new Schema<IReaction>({
     createdAt: {
         type: Date,
         default: () => Date.now(),
-        get: function (this: IReaction, timestamp: Date) {
-            return dateFormat(timestamp); 
+        get: function (timestamp) {
+            return dateFormat(timestamp);
         },
     },
 }, {
@@ -43,8 +27,7 @@ const ReactionSchema = new Schema<IReaction>({
     },
     id: false,
 });
-
-const ThoughtSchema = new Schema<IThought>({
+const ThoughtSchema = new Schema({
     thoughtText: {
         type: String,
         required: true,
@@ -54,15 +37,15 @@ const ThoughtSchema = new Schema<IThought>({
     createdAt: {
         type: Date,
         default: () => Date.now(),
-        get: function (this: IThought, timestamp: Date) {
-            return dateFormat(timestamp);  
+        get: function (timestamp) {
+            return dateFormat(timestamp);
         },
     },
     username: {
         type: String,
         required: true,
     },
-    reactions: [ReactionSchema], 
+    reactions: [ReactionSchema],
 }, {
     toJSON: {
         virtuals: true,
@@ -70,10 +53,8 @@ const ThoughtSchema = new Schema<IThought>({
     },
     id: false,
 });
-
 // Virtual for reaction count
-ThoughtSchema.virtual('reactionCount').get(function (this: IThought) {
+ThoughtSchema.virtual('reactionCount').get(function () {
     return this.reactions.length;
 });
-
-export default mongoose.model<IThought>('Thought', ThoughtSchema);
+export default mongoose.model('Thought', ThoughtSchema);
