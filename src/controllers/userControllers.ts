@@ -3,7 +3,7 @@ import User from '../models/users';
 import Thought from '../models/thoughts';
 
 // GET all users
-export const getAllUsers: RequestHandler = async (req, res) => {
+export const getAllUsers: RequestHandler = async (_req, res) => {
     try {
         const users = await User.find().populate('thoughts friends');
         res.status(200).json(users);

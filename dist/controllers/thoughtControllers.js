@@ -1,7 +1,7 @@
 import Thought from '../models/thoughts';
 import User from '../models/users';
 // GET all thoughts
-export const getAllThoughts = async (req, res) => {
+export const getAllThoughts = async (_req, res) => {
     try {
         const thoughts = await Thought.find().populate('reactions');
         res.status(200).json(thoughts);

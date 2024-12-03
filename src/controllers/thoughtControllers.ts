@@ -1,9 +1,9 @@
 import { RequestHandler } from 'express';
-import Thought from '../models/Thought';
-import User from '../models/User';
+import Thought from '../models/thoughts';
+import User from '../models/users';
 
 // GET all thoughts
-export const getAllThoughts: RequestHandler = async (req, res) => {
+export const getAllThoughts: RequestHandler = async (_req, res) => {
     try {
         const thoughts = await Thought.find().populate('reactions');
         res.status(200).json(thoughts);
