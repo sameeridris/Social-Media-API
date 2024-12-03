@@ -1,4 +1,4 @@
-import Thoughts from './thoughts';
-import Users from './users';
+import Thought from './thoughts';
+import User from './users';
 
-export { Thoughts, Users };
+export { Thought, User };
