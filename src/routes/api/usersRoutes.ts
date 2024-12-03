@@ -13,17 +13,18 @@ const router = Router();
 
 // User routes
 router.route('/')
-    .get(getAllUsers)
-    .post(createUser);
+    .get(getAllUsers) // No overload error
+    .post(createUser); // No overload error
 
 router.route('/:id')
-    .get(getUserById)
-    .put(updateUser)
-    .delete(deleteUser);
+    .get(getUserById) // No overload error
+    .put(updateUser) // No overload error
+    .delete(deleteUser); // No overload error
 
 // Friend routes
 router.route('/:userId/friends/:friendId')
-    .post(addFriend)
-    .delete(removeFriend);
+    .post(addFriend) // No overload error
+    .delete(removeFriend); // No overload error
 
 export default router;
+

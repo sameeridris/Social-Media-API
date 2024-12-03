@@ -1,87 +1,115 @@
-import { Request, Response } from 'express';
+import { RequestHandler } from 'express';
 import Thought from '../models/thoughts';
 import User from '../models/users';
 
 // GET all thoughts
-export const getAllThoughts = async (req: Request, res: Response) => {
+export const getAllThoughts: RequestHandler = async (req, res) => {
     try {
-        const thoughts = await Thought.find();
-        res.json(thoughts);
+        const thoughts = await Thought.find().populate('reactions');
+        res.status(200).json(thoughts);
     } catch (error) {
-        res.status(500).json(error);
+        res.status(500).json({ error: 'Failed to retrieve thoughts', details: error });
     }
 };
 
-// GET single thought by ID
-export const getThoughtById = async (req: Request, res: Response) => {
+// GET a single thought by ID
+export const getThoughtById: RequestHandler = async (req, res) => {
     try {
-        const thought = await Thought.findById(req.params.id);
-        if (!thought) return res.status(404).json({ message: 'Thought not found' });
-        res.json(thought);
+        const thought = await Thought.findById(req.params.id).populate('reactions');
+        if (!thought) {
+            res.status(404).json({ message: 'Thought not found' });
+            return;
+        }
+        res.status(200).json(thought);
     } catch (error) {
-        res.status(500).json(error);
+        res.status(500).json({ error: 'Failed to retrieve thought', details: error });
     }
 };
 
-// POST create new thought
-export const createThought = async (req: Request, res: Response) => {
+// POST create a new thought
+export const createThought: RequestHandler = async (req, res) => {
     try {
-        const thought = await Thought.create(req.body);
-        await User.findByIdAndUpdate(req.body.userId, { $push: { thoughts: thought._id } });
-        res.status(201).json(thought);
-    } catch (error) {
-        res.status(500).json(error);
-    }
-};
+        const { thoughtText, username, userId } = req.body;
 
-// PUT update thought
-export const updateThought = async (req: Request, res: Response) => {
-    try {
-        const thought = await Thought.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!thought) return res.status(404).json({ message: 'Thought not found' });
-        res.json(thought);
-    } catch (error) {
-        res.status(500).json(error);
-    }
-};
-
-// DELETE thought
-export const deleteThought = async (req: Request, res: Response) => {
-    try {
-        const thought = await Thought.findByIdAndDelete(req.params.id);
-        if (!thought) return res.status(404).json({ message: 'Thought not found' });
-        res.json({ message: 'Thought deleted' });
-    } catch (error) {
-        res.status(500).json(error);
-    }
-};
-
-// POST add reaction
-export const addReaction = async (req: Request, res: Response) => {
-    try {
-        const thought = await Thought.findByIdAndUpdate(
-            req.params.thoughtId,
-            { $addToSet: { reactions: req.body } },
+        const newThought = await Thought.create({ thoughtText, username });
+        await User.findByIdAndUpdate(
+            userId,
+            { $push: { thoughts: newThought._id } },
             { new: true }
         );
-        if (!thought) return res.status(404).json({ message: 'Thought not found' });
-        res.json(thought);
+
+        res.status(201).json(newThought);
     } catch (error) {
-        res.status(500).json(error);
+        res.status(500).json({ error: 'Failed to create thought', details: error });
     }
 };
 
-// DELETE remove reaction
-export const removeReaction = async (req: Request, res: Response) => {
+// PUT update a thought
+export const updateThought: RequestHandler = async (req, res) => {
     try {
-        const thought = await Thought.findByIdAndUpdate(
+        const updatedThought = await Thought.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!updatedThought) {
+            res.status(404).json({ message: 'Thought not found' });
+            return;
+        }
+        res.status(200).json(updatedThought);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update thought', details: error });
+    }
+};
+
+// DELETE remove a thought
+export const deleteThought: RequestHandler = async (req, res) => {
+    try {
+        const deletedThought = await Thought.findByIdAndDelete(req.params.id);
+        if (!deletedThought) {
+            res.status(404).json({ message: 'Thought not found' });
+            return;
+        }
+
+        await User.updateMany(
+            { thoughts: req.params.id },
+            { $pull: { thoughts: req.params.id } }
+        );
+
+        res.status(200).json({ message: 'Thought deleted' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete thought', details: error });
+    }
+};
+
+// POST add reaction to a thought
+export const addReaction: RequestHandler = async (req, res) => {
+    try {
+        const updatedThought = await Thought.findByIdAndUpdate(
+            req.params.thoughtId,
+            { $push: { reactions: req.body } },
+            { new: true }
+        );
+        if (!updatedThought) {
+            res.status(404).json({ message: 'Thought not found' });
+            return;
+        }
+        res.status(200).json(updatedThought);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to add reaction', details: error });
+    }
+};
+
+// DELETE remove a reaction
+export const removeReaction: RequestHandler = async (req, res) => {
+    try {
+        const updatedThought = await Thought.findByIdAndUpdate(
             req.params.thoughtId,
             { $pull: { reactions: { reactionId: req.params.reactionId } } },
             { new: true }
         );
-        if (!thought) return res.status(404).json({ message: 'Thought not found' });
-        res.json(thought);
+        if (!updatedThought) {
+            res.status(404).json({ message: 'Thought not found' });
+            return;
+        }
+        res.status(200).json(updatedThought);
     } catch (error) {
-        res.status(500).json(error);
+        res.status(500).json({ error: 'Failed to remove reaction', details: error });
     }
 };
